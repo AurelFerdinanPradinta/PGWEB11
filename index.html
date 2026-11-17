@@ -1,0 +1,166 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Web GIS Flores Timur</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css">
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            width: 100%;
+            height: 100vh;
+        }
+
+        .legend {
+            background: white;
+            padding: 10px;
+            line-height: 20px;
+            border-radius: 5px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.3);
+        }
+
+        .legend img {
+            max-width: 180px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="map"></div>
+
+    <!-- Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+    <script>
+
+        // Initialize Map - Flores Timur
+        var map = L.map("map").setView([-8.35, 122.98], 10);
+
+        // OpenStreetMap
+        var osm = L.tileLayer(
+            "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+            {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap contributors'
+            }
+        );
+
+        osm.addTo(map);
+
+
+        // GeoServer WMS URL
+        var geoserverURL = "http://localhost:8080/geoserver/wms";
+
+
+        // Layer Area - Batas Kecamatan
+        var wmsLayer1 = L.tileLayer.wms(geoserverURL, {
+            layers: "pgweb:batas_kecamatan",
+            format: "image/png",
+            transparent: true,
+            version: "1.1.1"
+        });
+
+        wmsLayer1.addTo(map);
+
+
+        // Layer Line - Jalan
+        var wmsLayer2 = L.tileLayer.wms(geoserverURL, {
+            layers: "pgweb:jalan",
+            format: "image/png",
+            transparent: true,
+            version: "1.1.1"
+        });
+
+        wmsLayer2.addTo(map);
+
+
+        // Layer Titik - Toponimi
+        var wmsLayer3 = L.tileLayer.wms(geoserverURL, {
+            layers: "pgweb:toponimi",
+            format: "image/png",
+            transparent: true,
+            version: "1.1.1"
+        });
+
+        wmsLayer3.addTo(map);
+
+
+        // Legend
+        var legend = L.control({
+            position: "bottomleft"
+        });
+
+        legend.onAdd = function () {
+
+            var div = L.DomUtil.create("div", "legend");
+
+            div.innerHTML = "<b>LEGENDA</b><br>";
+
+            var layers = [
+                "pgweb:batas_kecamatan",
+                "pgweb:jalan",
+                "pgweb:toponimi"
+            ];
+
+            layers.forEach(function (layer) {
+
+                var img = document.createElement("img");
+
+                img.src = geoserverURL +
+                    "?service=WMS" +
+                    "&request=GetLegendGraphic" +
+                    "&version=1.1.1" +
+                    "&format=image/png" +
+                    "&layer=" + encodeURIComponent(layer);
+
+                img.alt = layer;
+
+                div.appendChild(img);
+                div.appendChild(document.createElement("br"));
+
+            });
+
+            return div;
+        };
+
+        legend.addTo(map);
+
+
+        // Base Maps
+        var baseMaps = {
+            "OpenStreetMap": osm
+        };
+
+
+        // Overlay Maps
+        var overlayMaps = {
+            "Batas Kecamatan": wmsLayer1,
+            "Jalan": wmsLayer2,
+            "Toponimi": wmsLayer3
+        };
+
+
+        // Layer Control
+        L.control.layers(
+            baseMaps,
+            overlayMaps
+        ).addTo(map);
+
+
+    </script>
+
+</body>
+</html>
